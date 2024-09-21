@@ -1,0 +1,10 @@
+name: PixelBattle
+version: 1.0
+main: uz.ibrohimov.pixel_battle.PixelBattlePlugin
+api-version: 1.13
+authors: [Ibrohimov]
+description: A pixel battle plugin for Minecraft
+commands:
+  pixelbattle:
+    description: Main command for PixelBattle plugin
+    usage: /<command> [subcommand]
