@@ -1,0 +1,28 @@
+# Database file name
+db_file: db.sqlite
+
+# World name
+world: world
+
+# Coordinates for the pixel battle area
+x1: -100
+x2: 100
+z1: -100
+z2: 100
+y: 256
+
+# Energy settings
+starting_energy: 10
+refill_time: 120
+max_energy: 10
+
+# Energy consumption
+break_consumes: 2
+place_consumes: 1
+
+# Whitelisted blocks
+blocks_whitelist:
+  - COBBLESTONE
+  - IRON_BLOCK
+  - COAL_BLOCK
+  - SNOW_BLOCK
