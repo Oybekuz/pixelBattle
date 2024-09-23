@@ -1,44 +1,53 @@
 package uz.ibrohimov.pixel_battle;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
 
 public class PixelBattlePlugin extends JavaPlugin {
 
     private FileConfiguration config;
+    private DatabaseManager databaseManager;
+    private BukkitTask energyRefillTask;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
         getLogger().info("PixelBattle plugin has been enabled!");
         
-        // Load configuration
         loadConfig();
         
-        // TODO: Setup database connection
-        // TODO: Register events
-        // TODO: Register commands
+        databaseManager = new DatabaseManager(this);
+        databaseManager.initialize();
+        
+        // Register event listener
+        getServer().getPluginManager().registerEvents(new PixelBattleListener(this), this);
+        
+        // Start energy refill task
+        startEnergyRefillTask();
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
         getLogger().info("PixelBattle plugin has been disabled!");
         
-        // TODO: Save data and close database connection
+        if (databaseManager != null) {
+            databaseManager.closeConnection();
+        }
+        
+        if (energyRefillTask != null) {
+            energyRefillTask.cancel();
+        }
     }
 
     private void loadConfig() {
-        // Save default config if it doesn't exist
         saveDefaultConfig();
-        
-        // Load the config
         reloadConfig();
         config = getConfig();
         
-        // Set default values if they don't exist
         config.addDefault("db_file", "db.sqlite");
         config.addDefault("world", "world");
         config.addDefault("x1", -100);
@@ -53,13 +62,32 @@ public class PixelBattlePlugin extends JavaPlugin {
         config.addDefault("place_consumes", 1);
         config.addDefault("blocks_whitelist", Arrays.asList("COBBLESTONE", "IRON_BLOCK", "COAL_BLOCK", "SNOW_BLOCK"));
         
-        // Save the config
         config.options().copyDefaults(true);
         saveConfig();
     }
 
-    // Getter for the config
+    private void startEnergyRefillTask() {
+        int refillTime = getConfig().getInt("refill_time");
+        int maxEnergy = getConfig().getInt("max_energy");
+        
+        energyRefillTask = Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                String uuid = player.getUniqueId().toString();
+                String playerName = player.getName();
+                int currentEnergy = databaseManager.getPlayerEnergy(uuid, playerName);
+                if (currentEnergy < maxEnergy) {
+                    databaseManager.updatePlayerEnergy(uuid, 1);
+                    player.sendMessage("Sizda energiya oshdi. Hozirgi energiya: " + (currentEnergy + 1));
+                }
+            }
+        }, refillTime * 20L, refillTime * 20L); // Convert seconds to ticks
+    }
+
     public FileConfiguration getPluginConfig() {
         return config;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 }
